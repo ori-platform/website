@@ -1,940 +1,1436 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ori — Intelligence for the physical world</title>
-<meta name="description" content="Ori is an open-source, offline-first agentic IoT runtime with a Physical Actuation Trust framework. Built in Lagos, Nigeria. Running on a $55 Raspberry Pi.">
-<meta property="og:title" content="Ori — Intelligence for the physical world">
-<meta property="og:description" content="Open-source agentic IoT runtime. Physical Actuation Trust framework. Offline-capable. Built for the world's majority condition.">
-<meta property="og:url" content="https://oriplatform.dev">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:       #080C10;
-    --bg2:      #0D1318;
-    --bg3:      #121820;
-    --blue:     #1F5C99;
-    --blue-l:   #2B7FD4;
-    --blue-ll:  #5BA3E8;
-    --amber:    #E07B00;
-    --amber-l:  #F5A623;
-    --teal:     #0E9E80;
-    --teal-l:   #12C9A1;
-    --red:      #C0392B;
-    --text:     #E8EDF2;
-    --text-2:   #8A9BB0;
-    --text-3:   #4A5A6A;
-    --border:   rgba(255,255,255,0.07);
-    --border-b: rgba(43,127,212,0.25);
-    --glow:     0 0 40px rgba(31,92,153,0.15);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* GRID BACKGROUND */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(31,92,153,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(31,92,153,0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* NOISE OVERLAY */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    padding: 20px 0;
-    background: rgba(8,12,16,0.85);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  nav .inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--blue-l);
-    border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  nav a {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--text-2);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  nav a:hover { color: var(--text); }
-
-  .nav-links { display: flex; gap: 32px; align-items: center; }
-
-  .nav-cta {
-    background: var(--blue) !important;
-    color: white !important;
-    padding: 8px 18px;
-    border-radius: 4px;
-    font-size: 12px !important;
-    transition: background 0.2s !important;
-  }
-
-  .nav-cta:hover { background: var(--blue-l) !important; }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 120px 0 80px;
-    position: relative;
-  }
-
-  .hero-glow {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(ellipse at center, rgba(31,92,153,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .hero-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--blue-l);
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .hero-tag::before {
-    content: '';
-    display: block;
-    width: 32px;
-    height: 1px;
-    background: var(--blue-l);
-  }
-
-  h1 {
-    font-size: clamp(42px, 7vw, 82px);
-    font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -2px;
-    margin-bottom: 32px;
-  }
-
-  h1 .line-1 { color: var(--text); display: block; }
-  h1 .line-2 {
-    color: transparent;
-    -webkit-text-stroke: 1px rgba(91,163,232,0.5);
-    display: block;
-  }
-  h1 .line-3 { color: var(--blue-ll); display: block; }
-
-  .hero-sub {
-    font-size: 18px;
-    color: var(--text-2);
-    max-width: 560px;
-    line-height: 1.7;
-    margin-bottom: 48px;
-    font-weight: 400;
-  }
-
-  .hero-sub strong { color: var(--text); font-weight: 600; }
-
-  .hero-actions {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 80px;
-  }
-
-  .btn-primary {
-    background: var(--blue);
-    color: white;
-    padding: 14px 28px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    border: 1px solid var(--blue);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-primary:hover {
-    background: var(--blue-l);
-    border-color: var(--blue-l);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(31,92,153,0.3);
-  }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--text-2);
-    padding: 14px 28px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    font-weight: 400;
-    transition: all 0.2s;
-    border: 1px solid var(--border);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-secondary:hover {
-    border-color: rgba(255,255,255,0.2);
-    color: var(--text);
-  }
-
-  /* STATS BAR */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-
-  .stat {
-    background: var(--bg2);
-    padding: 20px 24px;
-    text-align: center;
-  }
-
-  .stat-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--blue-ll);
-    display: block;
-    letter-spacing: -1px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--text-3);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-family: 'IBM Plex Mono', monospace;
-    margin-top: 4px;
-    display: block;
-  }
-
-  /* WHAT ORI IS */
-  .section {
-    padding: 100px 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  .section-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-3);
-    margin-bottom: 16px;
-  }
-
-  h2 {
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin-bottom: 20px;
-  }
-
-  .section-lead {
-    font-size: 17px;
-    color: var(--text-2);
-    max-width: 640px;
-    line-height: 1.75;
-    margin-bottom: 56px;
-  }
-
-  /* ARCHITECTURE TIERS */
-  .tiers {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 48px;
-  }
-
-  .tier {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .tier:hover {
-    border-color: var(--border-b);
-    transform: translateY(-2px);
-  }
-
-  .tier::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-  }
-
-  .tier-a::before { background: var(--blue-l); }
-  .tier-b::before { background: var(--teal-l); }
-  .tier-c::before { background: var(--amber-l); }
-  .tier-d::before { background: var(--red); }
-
-  .tier-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .tier-a .tier-label { color: var(--blue-l); }
-  .tier-b .tier-label { color: var(--teal-l); }
-  .tier-c .tier-label { color: var(--amber-l); }
-  .tier-d .tier-label { color: var(--red); }
-
-  .tier h3 {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    color: var(--text);
-    letter-spacing: -0.3px;
-  }
-
-  .tier p {
-    font-size: 13px;
-    color: var(--text-2);
-    line-height: 1.6;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 300;
-  }
-
-  /* PRODUCTS */
-  .products {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .product {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 32px 28px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.25s;
-  }
-
-  .product:hover {
-    border-color: var(--border-b);
-    box-shadow: var(--glow);
-    transform: translateY(-3px);
-  }
-
-  .product-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-bottom: 20px;
-  }
-
-  .product-energy .product-icon { background: rgba(31,92,153,0.15); }
-  .product-guard .product-icon { background: rgba(14,158,128,0.15); }
-  .product-operate .product-icon { background: rgba(108,52,131,0.15); }
-
-  .product h3 {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
-
-  .product p {
-    font-size: 14px;
-    color: var(--text-2);
-    line-height: 1.65;
-  }
-
-  .product-tag {
-    display: inline-block;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 3px;
-    margin-bottom: 14px;
-  }
-
-  .product-energy .product-tag { background: rgba(31,92,153,0.2); color: var(--blue-ll); }
-  .product-guard .product-tag { background: rgba(14,158,128,0.2); color: var(--teal-l); }
-  .product-operate .product-tag { background: rgba(108,52,131,0.2); color: #B07FD8; }
-
-  /* INTELLIGENCE ELEVATOR */
-  .elevator {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .elevator-row {
-    display: grid;
-    grid-template-columns: 100px 1fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 20px 28px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-
-  .elevator-row:last-child { border-bottom: none; }
-  .elevator-row:hover { background: rgba(255,255,255,0.02); }
-
-  .elevator-tier {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-  }
-
-  .t1 { color: var(--red); }
-  .t2 { color: var(--amber-l); }
-  .t3 { color: var(--teal-l); }
-  .t4 { color: var(--blue-ll); }
-
-  .elevator-desc { font-size: 14px; color: var(--text-2); }
-  .elevator-desc strong { color: var(--text); font-weight: 600; }
-
-  .elevator-badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 4px 10px;
-    border-radius: 3px;
-    white-space: nowrap;
-    letter-spacing: 1px;
-  }
-
-  .badge-always { background: rgba(192,57,43,0.15); color: #E57373; }
-  .badge-offline { background: rgba(224,123,0,0.15); color: var(--amber-l); }
-  .badge-lan { background: rgba(14,158,128,0.15); color: var(--teal-l); }
-  .badge-optional { background: rgba(31,92,153,0.15); color: var(--blue-ll); }
-
-  /* DIVIDER */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin: 0;
-  }
-
-  /* OPEN SOURCE */
-  .oss-block {
-    background: var(--bg2);
-    border: 1px solid var(--border-b);
-    border-radius: 8px;
-    padding: 48px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 40px;
-    align-items: center;
-  }
-
-  .oss-block h3 {
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 12px;
-  }
-
-  .oss-block p {
-    font-size: 15px;
-    color: var(--text-2);
-    line-height: 1.7;
-    max-width: 520px;
-  }
-
-  .gh-link {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 20px 28px;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    text-align: center;
-    transition: all 0.2s;
-    min-width: 160px;
-    white-space: nowrap;
-  }
-
-  .gh-link:hover {
-    border-color: rgba(255,255,255,0.15);
-    transform: translateY(-2px);
-  }
-
-  .gh-link svg { opacity: 0.8; }
-
-  .gh-link span {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--text-2);
-  }
-
-  .gh-link strong {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 48px 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  .footer-inner {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 40px;
-    align-items: center;
-  }
-
-  .footer-left p {
-    font-size: 14px;
-    color: var(--text-3);
-    margin-top: 8px;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  .footer-right {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-  }
-
-  .footer-right a {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--text-3);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .footer-right a:hover { color: var(--text-2); }
-
-  /* STATUS BADGE */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(14,158,128,0.1);
-    border: 1px solid rgba(14,158,128,0.2);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--teal-l);
-    letter-spacing: 1px;
-    margin-bottom: 32px;
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--teal-l);
-    border-radius: 50%;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  /* CODE BLOCK */
-  .code-block {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 20px 24px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--text-2);
-    margin-top: 32px;
-    overflow-x: auto;
-  }
-
-  .code-block .comment { color: var(--text-3); }
-  .code-block .key { color: var(--blue-ll); }
-  .code-block .val { color: var(--amber-l); }
-  .code-block .str { color: var(--teal-l); }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-up {
-    animation: fadeUp 0.7s ease forwards;
-    opacity: 0;
-  }
-
-  .fade-up-1 { animation-delay: 0.1s; }
-  .fade-up-2 { animation-delay: 0.2s; }
-  .fade-up-3 { animation-delay: 0.35s; }
-  .fade-up-4 { animation-delay: 0.5s; }
-  .fade-up-5 { animation-delay: 0.65s; }
-
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    .tiers { grid-template-columns: 1fr; }
-    .products { grid-template-columns: 1fr; }
-    .oss-block { grid-template-columns: 1fr; }
-    .footer-inner { grid-template-columns: 1fr; }
-    .footer-right { flex-wrap: wrap; gap: 16px; }
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    .nav-links { gap: 16px; }
-    .elevator-row { grid-template-columns: 80px 1fr; }
-    .elevator-badge { display: none; }
-    h1 { letter-spacing: -1px; }
-  }
-</style>
-</head>
-<body>
-
-<!-- NAV -->
-<nav>
-  <div class="inner">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      ori
-    </a>
-    <div class="nav-links">
-      <a href="#architecture">Architecture</a>
-      <a href="#products">Products</a>
-      <a href="https://github.com/ori-platform" target="_blank" rel="noopener">GitHub</a>
-      <a href="mailto:wasiu@oriplatform.dev" class="nav-cta">Contact</a>
-    </div>
-  </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <div class="container">
-
-    <div class="status-badge fade-up fade-up-1">
-      <span class="status-dot"></span>
-      Active development — Lagos, Nigeria
-    </div>
-
-    <div class="hero-tag fade-up fade-up-1">Open-source agentic IoT runtime</div>
-
-    <h1 class="fade-up fade-up-2">
-      <span class="line-1">Intelligence</span>
-      <span class="line-2">for the</span>
-      <span class="line-3">physical world.</span>
-    </h1>
-
-    <p class="hero-sub fade-up fade-up-3">
-      Ori reads physical sensors, reasons locally with a small offline language model,
-      and takes <strong>autonomous physical actions</strong> governed by a formal
-      Physical Actuation Trust framework. Runs on a <strong>$55 Raspberry Pi</strong>.
-      No cloud required.
-    </p>
-
-    <div class="hero-actions fade-up fade-up-4">
-      <a href="https://github.com/ori-platform/ori-runtime" class="btn-primary" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-        View Runtime on GitHub
-      </a>
-      <a href="mailto:wasiu@oriplatform.dev" class="btn-secondary">
-        wasiu@oriplatform.dev
-      </a>
-    </div>
-
-    <div class="stats fade-up fade-up-5">
-      <div class="stat">
-        <span class="stat-num">901</span>
-        <span class="stat-label">Passing Tests</span>
-      </div>
-      <div class="stat">
-        <span class="stat-num">4</span>
-        <span class="stat-label">Action Tiers</span>
-      </div>
-      <div class="stat">
-        <span class="stat-num">$55</span>
-        <span class="stat-label">Target Hardware</span>
-      </div>
-      <div class="stat">
-        <span class="stat-num">Apache 2.0</span>
-        <span class="stat-label">Licence</span>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ARCHITECTURE -->
-<section class="section" id="architecture">
-  <div class="container">
-
-    <p class="section-tag">Physical Actuation Trust</p>
-    <h2>Every action earns its authority.</h2>
-    <p class="section-lead">
-      Ori does not treat LLM output as a direct control signal. Every autonomous action
-      is classified into one of four tiers. The tier determines the execution path,
-      oversight requirements, and failure behaviour — governed by the Action Tier Framework.
-    </p>
-
-    <div class="tiers">
-      <div class="tier tier-a">
-        <div class="tier-label">Tier A — Informational</div>
-        <h3>Always autonomous</h3>
-        <p>WhatsApp alerts, SMS, dashboard logs. The agent reasons and acts without approval. When Ori sends a reasoned alert, no human approved it first.</p>
-      </div>
-      <div class="tier tier-b">
-        <div class="tier-label">Tier B — Soft Physical</div>
-        <h3>Autonomous by default</h3>
-        <p>Power source switching, valve modulation, thermostat adjustment. Reversible and low-consequence. Configurable to require approval.</p>
-      </div>
-      <div class="tier tier-c">
-        <div class="tier-label">Tier C — Hard Physical</div>
-        <h3>Approval required. Always.</h3>
-        <p>Breaker trips, equipment shutdown, high-pressure valve isolation. Ori reasons and proposes. The operator replies YES or NO. No bypass exists in the architecture.</p>
-      </div>
-      <div class="tier tier-d">
-        <div class="tier-label">Tier D — Safety-Critical</div>
-        <h3>Deterministic. Pre-LLM. Inviolable.</h3>
-        <p>Fires from the rule engine before any LLM is consulted. Cannot be disabled by skill config, operator instruction, or runtime state. asyncio.shield() ensures cancellation resistance.</p>
-      </div>
-    </div>
-
-    <p class="section-tag" style="margin-top:56px;">Intelligence Elevator</p>
-    <h2>Cheapest adequate reasoning tier, always.</h2>
-    <p class="section-lead">Four reasoning levels evaluated in order. First adequate tier wins. Tier 1 and 2 operate fully offline.</p>
-
-    <div class="elevator">
-      <div class="elevator-row">
-        <span class="elevator-tier t1">Tier 1</span>
-        <div class="elevator-desc"><strong>Rule Engine</strong> — Deterministic rule evaluation in microseconds. Handles all Tier D safety-critical events. Always available.</div>
-        <span class="elevator-badge badge-always">Always</span>
-      </div>
-      <div class="elevator-row">
-        <span class="elevator-tier t2">Tier 2</span>
-        <div class="elevator-desc"><strong>Local SLM</strong> — Qwen2.5-0.5B via llama-cpp-python. 3–8s inference on Pi 4. Causal memory lookup before LLM call.</div>
-        <span class="elevator-badge badge-offline">Offline</span>
-      </div>
-      <div class="elevator-row">
-        <span class="elevator-tier t3">Tier 3</span>
-        <div class="elevator-desc"><strong>Gateway LLM</strong> — Llama 3.2-3B on a LAN gateway or edge server. MQTT request/response. LAN required.</div>
-        <span class="elevator-badge badge-lan">LAN only</span>
-      </div>
-      <div class="elevator-row">
-        <span class="elevator-tier t4">Tier 4</span>
-        <div class="elevator-desc"><strong>Cloud LLM</strong> — Claude API or equivalent. Used only when local reasoning confidence is insufficient.</div>
-        <span class="elevator-badge badge-optional">Optional</span>
-      </div>
-    </div>
-
-    <div class="code-block">
-<span class="comment"># Example skill trigger — Tier D gas safety</span>
-<br>triggers:
-<br>&nbsp;&nbsp;- name: <span class="str">gas_leak_detected</span>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;condition: <span class="str">'gas_concentration > 400'</span>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">bypass_llm</span>: <span class="val">true</span>   <span class="comment"># enforced automatically for Tier D</span>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">action_tier</span>: <span class="val">D</span>      <span class="comment"># fires before Intelligence Elevator</span>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;cooldown_seconds: <span class="val">0</span>   <span class="comment"># no delay on safety events</span>
-    </div>
-
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- PRODUCTS -->
-<section class="section" id="products">
-  <div class="container">
-
-    <p class="section-tag">Product Suite</p>
-    <h2>Three products. One runtime. One data moat.</h2>
-    <p class="section-lead">
-      Every product shares the same offline-capable runtime, safety architecture, and causal memory layer.
-      Each deployment compounds the intelligence of every other.
-    </p>
-
-    <div class="products">
-      <div class="product product-energy">
-        <div class="product-icon">⚡</div>
-        <span class="product-tag">Ori Energy</span>
-        <h3>Smart power management</h3>
-        <p>Autonomous generator control, solar monitoring, voltage spike protection, and weekly Naira-denominated cost reports. Knows when PHCN returns before you do.</p>
-      </div>
-      <div class="product product-guard">
-        <div class="product-icon">🛡</div>
-        <span class="product-tag">Ori Guard</span>
-        <h3>Physical safety suite</h3>
-        <p>Gas, Fire, Flood, and Power monitoring with autonomous safety response. Tier D closes the valve. Tier A alerts your WhatsApp. The four risks every commercial building carries, handled.</p>
-      </div>
-      <div class="product product-operate">
-        <div class="product-icon">⚙</div>
-        <span class="product-tag">Ori Operate</span>
-        <h3>Industrial intelligence</h3>
-        <p>OPC-UA and Modbus integration for manufacturers, cold chain operators, and processing facilities. Energy cost per unit of production, calculated in real time.</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- OPEN SOURCE -->
-<section class="section">
-  <div class="container">
-    <div class="oss-block">
-      <div>
-        <p class="section-tag">Open Source</p>
-        <h3>Apache 2.0. Auditable by design.</h3>
-        <p>
-          Any business that lets a system autonomously trip a breaker or close a gas valve needs
-          to trust the code. Ori lets customers, insurance underwriters, and regulators audit exactly
-          what is making physical decisions. The Physical Actuation Trust framework paper is in
-          arXiv submission. 901 tests. Contributions welcome.
-        </p>
-      </div>
-      <a href="https://github.com/ori-platform/ori-runtime" class="gh-link" target="_blank" rel="noopener">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-        <strong>ori-platform</strong>
-        <span>github.com/ori-platform</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <a href="/" class="logo" style="font-size:16px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:var(--text);">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ori — Intelligence for the physical world</title>
+    <meta
+      name="description"
+      content="Ori is an open-source, offline-first agentic IoT runtime with a Physical Actuation Trust framework. Built in Lagos, Nigeria. Running on a $55 Raspberry Pi."
+    />
+    <meta
+      property="og:title"
+      content="Ori — Intelligence for the physical world"
+    />
+    <meta
+      property="og:description"
+      content="Open-source agentic IoT runtime. Physical Actuation Trust framework. Offline-capable. Built for the world's majority condition."
+    />
+    <meta property="og:url" content="https://oriplatform.dev" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjMDgwQzEwIi8+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzFGNUM5OSIgb3BhY2l0eT0iMC4xNSIvPgogIDwhLS0gTyBsZXR0ZXJmb3JtIC0gY2xlYW4gZ2VvbWV0cmljIC0tPgogIDxwYXRoIGQ9Ik0xNiA3IEMxMC40OCA3IDYgMTEuNDggNiAxNyBDNiAyMi41MiAxMC40OCAyNyAxNiAyNyBDMjEuNTIgMjcgMjYgMjIuNTIgMjYgMTcgQzI2IDExLjQ4IDIxLjUyIDcgMTYgNyBaIE0xNiAyMiBDMTMuMjQgMjIgMTEgMTkuNzYgMTEgMTcgQzExIDE0LjI0IDEzLjI0IDEyIDE2IDEyIEMxOC43NiAxMiAyMSAxNC4yNCAyMSAxNyBDMjEgMTkuNzYgMTguNzYgMjIgMTYgMjIgWiIgZmlsbD0iIzJCN0ZENCIvPgogIDwhLS0gQ2VudHJlIHB1bHNlIGRvdCAtLT4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE3IiByPSIyLjUiIGZpbGw9IiM1QkEzRTgiLz4KPC9zdmc+Cg=="
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAADtklEQVRYhcWWz28bRRzFP7N2HXftOnZ+OCEgEic1tEjFKCXY6YEKkEDikBJQVVVUtdR/ACEuHDlyQT2AuCAhRFXg0tCmB8SlIIqUOuJHrFRcmtQuoCiNmzi2s+s4We9wSGIRrXftRlbyjm/ed96b78zOjqCGAa+v1/2eNDkn4BhCHKaFEJKSKeSskObn2tL9qzUewBuM9Lu8rh+Q4ngrTW3DICfXHhrnILuuwIB3P80BJGLMH3ZdBXD5ers+QIrz+2VegxDH3YHOu65DasdnQojefQ8ACCnDioBnDsIcACmGFYRQDyyAIOB+LL3iRo3EUSNxPN1DuHydAFS1ZTZy82iZFOVMCmkazc/p64nKZoTq4CihRJJDgR5HnVFcJD/1FVom1ZoAQiiEEhcJxM40NeEOCunr5O9cAWk66pRGE+3FHKA99hah+IWGOscA6uDonsxrIV4YR43EHTW2h1AobkKJZN0xPZuimL7JRm4OAE84SiA2hto/YtF2JJKUH/xuezBdHn/nR/UGfIOjHHnudQufv3OFlV+/wFjLIc0q0qxilJbQ5m6DaeB98vldesV7hI3lv9nM/1M3gO0W1Gudnk1RmJkAwKMGiJwaJ3JqHI8aAGD1j2voD36zLiZi7cwObLegrWvIwhXTN7fG/CFeef9LvO1dADz72kV+unyJylqeYnoStf/FXXWecNQ2gG0HXL4OC1d5NA9A34nTNXMAb3sXfSde3tJsn4v/w61a52oYwAmyzrdd44SoU2B/F9gGqGorFq6t+ygAC7O/UC7kany5kGNh9va2xrp1RnnVNoDtGajk5nAH+3ZxgdgY6wt32dBWufVJkqdirwLwb/oWm3ppW2O9NyoP79kGsO2Alp22cGr/CMHhdwDY1Etkpm6QmbpRMw+ePIv69ElLnV5nrh3YdqCcSWEUF3EHdr9Vgi9dwNNzjGJ6kkpua2Vt4SiB2Jm65kZhgXLW/sfk+DPyReJ0v/GhbXFDSMnSjx87dsDxK9AyKQrp63v2L8xMOJo3DABbV29h5vvHc5aSwswE+elvGkqbf5BE4nQkkrjbn3DUGYUFVqa+RnfY910B/OFoSQr8TYkVF4cHEvgiI3i6j+LefpIZ2iMqS/Po2WnK2RTSrDZnLlkTvp7oz8DppipaDCnln4qp8OlBmAMIRXwrAPzhoWtSKG/vp7kU8i99kWEFYG2p+q5ATu6nublefRPmKq4tatXY0Fa+8/iD96RQeoQkiKCtta5SlzArFHFZX+SSsX5/GeA/JXtS42I6mcEAAAAASUVORK5CYII="
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAADtklEQVRYhcWWz28bRRzFP7N2HXftOnZ+OCEgEic1tEjFKCXY6YEKkEDikBJQVVVUtdR/ACEuHDlyQT2AuCAhRFXg0tCmB8SlIIqUOuJHrFRcmtQuoCiNmzi2s+s4We9wSGIRrXftRlbyjm/ed96b78zOjqCGAa+v1/2eNDkn4BhCHKaFEJKSKeSskObn2tL9qzUewBuM9Lu8rh+Q4ngrTW3DICfXHhrnILuuwIB3P80BJGLMH3ZdBXD5ers+QIrz+2VegxDH3YHOu65DasdnQojefQ8ACCnDioBnDsIcACmGFYRQDyyAIOB+LL3iRo3EUSNxPN1DuHydAFS1ZTZy82iZFOVMCmkazc/p64nKZoTq4CihRJJDgR5HnVFcJD/1FVom1ZoAQiiEEhcJxM40NeEOCunr5O9cAWk66pRGE+3FHKA99hah+IWGOscA6uDonsxrIV4YR43EHTW2h1AobkKJZN0xPZuimL7JRm4OAE84SiA2hto/YtF2JJKUH/xuezBdHn/nR/UGfIOjHHnudQufv3OFlV+/wFjLIc0q0qxilJbQ5m6DaeB98vldesV7hI3lv9nM/1M3gO0W1Gudnk1RmJkAwKMGiJwaJ3JqHI8aAGD1j2voD36zLiZi7cwObLegrWvIwhXTN7fG/CFeef9LvO1dADz72kV+unyJylqeYnoStf/FXXWecNQ2gG0HXL4OC1d5NA9A34nTNXMAb3sXfSde3tJsn4v/w61a52oYwAmyzrdd44SoU2B/F9gGqGorFq6t+ygAC7O/UC7kany5kGNh9va2xrp1RnnVNoDtGajk5nAH+3ZxgdgY6wt32dBWufVJkqdirwLwb/oWm3ppW2O9NyoP79kGsO2Alp22cGr/CMHhdwDY1Etkpm6QmbpRMw+ePIv69ElLnV5nrh3YdqCcSWEUF3EHdr9Vgi9dwNNzjGJ6kkpua2Vt4SiB2Jm65kZhgXLW/sfk+DPyReJ0v/GhbXFDSMnSjx87dsDxK9AyKQrp63v2L8xMOJo3DABbV29h5vvHc5aSwswE+elvGkqbf5BE4nQkkrjbn3DUGYUFVqa+RnfY910B/OFoSQr8TYkVF4cHEvgiI3i6j+LefpIZ2iMqS/Po2WnK2RTSrDZnLlkTvp7oz8DppipaDCnln4qp8OlBmAMIRXwrAPzhoWtSKG/vp7kU8i99kWEFYG2p+q5ATu6nublefRPmKq4tatXY0Fa+8/iD96RQeoQkiKCtta5SlzArFHFZX+SSsX5/GeA/JXtS42I6mcEAAAAASUVORK5CYII="
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #080c10;
+        --bg2: #0d1318;
+        --bg3: #121820;
+        --blue: #1f5c99;
+        --blue-l: #2b7fd4;
+        --blue-ll: #5ba3e8;
+        --amber: #e07b00;
+        --amber-l: #f5a623;
+        --teal: #0e9e80;
+        --teal-l: #12c9a1;
+        --red: #c0392b;
+        --text: #e8edf2;
+        --text-2: #8a9bb0;
+        --text-3: #4a5a6a;
+        --border: rgba(255, 255, 255, 0.07);
+        --border-b: rgba(43, 127, 212, 0.25);
+        --glow: 0 0 40px rgba(31, 92, 153, 0.15);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        overflow-x: hidden;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Syne", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* GRID BACKGROUND */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(31, 92, 153, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(31, 92, 153, 0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* NOISE OVERLAY */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.4;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 5vw, 24px);
+        position: relative;
+        z-index: 1;
+      }
+
+      /* NAV */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 20px 0;
+        background: rgba(8, 12, 16, 0.85);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      nav .inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: -0.5px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--blue-l);
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.7);
+        }
+      }
+
+      nav a {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        color: var(--text-2);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      nav a:hover {
+        color: var(--text);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 32px;
+        align-items: center;
+      }
+
+      .nav-toggle,
+      .nav-menu-button {
+        display: none;
+      }
+
+      .nav-cta {
+        background: var(--blue) !important;
+        color: white !important;
+        padding: 8px 18px;
+        border-radius: 4px;
+        font-size: 12px !important;
+        transition: background 0.2s !important;
+      }
+
+      .nav-cta:hover {
+        background: var(--blue-l) !important;
+      }
+
+      /* HERO */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 120px 0 80px;
+        position: relative;
+      }
+
+      .hero-glow {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(600px, 100vw);
+        height: 400px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(31, 92, 153, 0.12) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .hero-tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--blue-l);
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .hero-tag::before {
+        content: "";
+        display: block;
+        width: 32px;
+        height: 1px;
+        background: var(--blue-l);
+      }
+
+      h1 {
+        font-size: clamp(42px, 7vw, 82px);
+        font-weight: 800;
+        line-height: 1.02;
+        letter-spacing: -2px;
+        margin-bottom: 32px;
+      }
+
+      h1 .line-1 {
+        color: var(--text);
+        display: block;
+      }
+      h1 .line-2 {
+        color: transparent;
+        -webkit-text-stroke: 1px rgba(91, 163, 232, 0.5);
+        display: block;
+      }
+      h1 .line-3 {
+        color: var(--blue-ll);
+        display: block;
+      }
+
+      .hero-sub {
+        font-size: 18px;
+        color: var(--text-2);
+        max-width: 560px;
+        line-height: 1.7;
+        margin-bottom: 48px;
+        font-weight: 400;
+      }
+
+      .hero-sub strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 80px;
+      }
+
+      .btn-primary {
+        background: var(--blue);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+        border: 1px solid var(--blue);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .btn-primary:hover {
+        background: var(--blue-l);
+        border-color: var(--blue-l);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 24px rgba(31, 92, 153, 0.3);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--text-2);
+        padding: 14px 28px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        font-weight: 400;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: var(--text);
+      }
+
+      /* STATS BAR */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .stat {
+        background: var(--bg2);
+        padding: 20px 24px;
+        text-align: center;
+      }
+
+      .stat-num {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--blue-ll);
+        display: block;
+        letter-spacing: -1px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-3);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-family: "IBM Plex Mono", monospace;
+        margin-top: 4px;
+        display: block;
+      }
+
+      /* WHAT ORI IS */
+      .section {
+        padding: 100px 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .section-tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        font-size: clamp(28px, 4vw, 44px);
+        font-weight: 700;
+        letter-spacing: -1px;
+        line-height: 1.1;
+        margin-bottom: 20px;
+      }
+
+      .section-lead {
+        font-size: 17px;
+        color: var(--text-2);
+        max-width: 640px;
+        line-height: 1.75;
+        margin-bottom: 56px;
+      }
+
+      /* ARCHITECTURE TIERS */
+      .tiers {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 48px;
+      }
+
+      .tier {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+
+      .tier:hover {
+        border-color: var(--border-b);
+        transform: translateY(-2px);
+      }
+
+      .tier::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+      }
+
+      .tier-a::before {
+        background: var(--blue-l);
+      }
+      .tier-b::before {
+        background: var(--teal-l);
+      }
+      .tier-c::before {
+        background: var(--amber-l);
+      }
+      .tier-d::before {
+        background: var(--red);
+      }
+
+      .tier-label {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .tier-a .tier-label {
+        color: var(--blue-l);
+      }
+      .tier-b .tier-label {
+        color: var(--teal-l);
+      }
+      .tier-c .tier-label {
+        color: var(--amber-l);
+      }
+      .tier-d .tier-label {
+        color: var(--red);
+      }
+
+      .tier h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--text);
+        letter-spacing: -0.3px;
+      }
+
+      .tier p {
+        font-size: 13px;
+        color: var(--text-2);
+        line-height: 1.6;
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 300;
+      }
+
+      /* PRODUCTS */
+      .products {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .product {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 32px 28px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s;
+      }
+
+      .product:hover {
+        border-color: var(--border-b);
+        box-shadow: var(--glow);
+        transform: translateY(-3px);
+      }
+
+      .product-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 20px;
+      }
+
+      .product-energy .product-icon {
+        background: rgba(31, 92, 153, 0.15);
+      }
+      .product-guard .product-icon {
+        background: rgba(14, 158, 128, 0.15);
+      }
+      .product-operate .product-icon {
+        background: rgba(108, 52, 131, 0.15);
+      }
+
+      .product h3 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        margin-bottom: 10px;
+        color: var(--text);
+      }
+
+      .product p {
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.65;
+      }
+
+      .product-tag {
+        display: inline-block;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 3px;
+        margin-bottom: 14px;
+      }
+
+      .product-energy .product-tag {
+        background: rgba(31, 92, 153, 0.2);
+        color: var(--blue-ll);
+      }
+      .product-guard .product-tag {
+        background: rgba(14, 158, 128, 0.2);
+        color: var(--teal-l);
+      }
+      .product-operate .product-tag {
+        background: rgba(108, 52, 131, 0.2);
+        color: #b07fd8;
+      }
+
+      /* INTELLIGENCE ELEVATOR */
+      .elevator {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .elevator-row {
+        display: grid;
+        grid-template-columns: 100px 1fr auto;
+        align-items: center;
+        gap: 24px;
+        padding: 20px 28px;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+      }
+
+      .elevator-row:last-child {
+        border-bottom: none;
+      }
+      .elevator-row:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .elevator-tier {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+
+      .t1 {
+        color: var(--red);
+      }
+      .t2 {
+        color: var(--amber-l);
+      }
+      .t3 {
+        color: var(--teal-l);
+      }
+      .t4 {
+        color: var(--blue-ll);
+      }
+
+      .elevator-desc {
+        font-size: 14px;
+        color: var(--text-2);
+      }
+      .elevator-desc strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .elevator-badge {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        padding: 4px 10px;
+        border-radius: 3px;
+        white-space: nowrap;
+        letter-spacing: 1px;
+      }
+
+      .badge-always {
+        background: rgba(192, 57, 43, 0.15);
+        color: #e57373;
+      }
+      .badge-offline {
+        background: rgba(224, 123, 0, 0.15);
+        color: var(--amber-l);
+      }
+      .badge-lan {
+        background: rgba(14, 158, 128, 0.15);
+        color: var(--teal-l);
+      }
+      .badge-optional {
+        background: rgba(31, 92, 153, 0.15);
+        color: var(--blue-ll);
+      }
+
+      /* DIVIDER */
+      .divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border),
+          transparent
+        );
+        margin: 0;
+      }
+
+      /* OPEN SOURCE */
+      .oss-block {
+        background: var(--bg2);
+        border: 1px solid var(--border-b);
+        border-radius: 8px;
+        padding: 48px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 40px;
+        align-items: center;
+      }
+
+      .oss-block h3 {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        margin-bottom: 12px;
+      }
+
+      .oss-block p {
+        font-size: 15px;
+        color: var(--text-2);
+        line-height: 1.7;
+        max-width: 520px;
+      }
+
+      .gh-link {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 20px 28px;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+        transition: all 0.2s;
+        min-width: 160px;
+        white-space: nowrap;
+      }
+
+      .gh-link:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .gh-link svg {
+        opacity: 0.8;
+      }
+
+      .gh-link span {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        color: var(--text-2);
+        overflow-wrap: anywhere;
+      }
+
+      .gh-link strong {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        color: var(--text);
+      }
+
+      /* FOOTER */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 48px 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .footer-inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 40px;
+        align-items: center;
+      }
+
+      .footer-left p {
+        font-size: 14px;
+        color: var(--text-3);
+        margin-top: 8px;
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .footer-right {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .footer-right a {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        color: var(--text-3);
+        text-decoration: none;
+        transition: color 0.2s;
+        overflow-wrap: anywhere;
+      }
+
+      .footer-right a:hover {
+        color: var(--text-2);
+      }
+
+      /* STATUS BADGE */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(14, 158, 128, 0.1);
+        border: 1px solid rgba(14, 158, 128, 0.2);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--teal-l);
+        letter-spacing: 1px;
+        margin-bottom: 32px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--teal-l);
+        border-radius: 50%;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      /* CODE BLOCK */
+      .code-block {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 20px 24px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        color: var(--text-2);
+        margin-top: 32px;
+        overflow-x: auto;
+      }
+
+      .code-block .comment {
+        color: var(--text-3);
+      }
+      .code-block .key {
+        color: var(--blue-ll);
+      }
+      .code-block .val {
+        color: var(--amber-l);
+      }
+      .code-block .str {
+        color: var(--teal-l);
+      }
+
+      /* ANIMATIONS */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .fade-up {
+        animation: fadeUp 0.7s ease forwards;
+        opacity: 0;
+      }
+
+      .fade-up-1 {
+        animation-delay: 0.1s;
+      }
+      .fade-up-2 {
+        animation-delay: 0.2s;
+      }
+      .fade-up-3 {
+        animation-delay: 0.35s;
+      }
+      .fade-up-4 {
+        animation-delay: 0.5s;
+      }
+      .fade-up-5 {
+        animation-delay: 0.65s;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        body {
+          font-size: 15px;
+        }
+        nav {
+          padding: 14px 0;
+        }
+        nav .inner {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          padding: 0 16px;
+        }
+        .nav-toggle {
+          display: block;
+          height: 1px;
+          opacity: 0;
+          pointer-events: none;
+          position: absolute;
+          width: 1px;
+        }
+        .nav-menu-button {
+          align-items: center;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          cursor: pointer;
+          display: inline-flex;
+          flex-direction: column;
+          gap: 5px;
+          height: 42px;
+          justify-content: center;
+          justify-self: end;
+          width: 42px;
+        }
+        .nav-menu-button span {
+          background: var(--text);
+          border-radius: 999px;
+          display: block;
+          height: 2px;
+          transition:
+            opacity 0.2s,
+            transform 0.2s;
+          width: 18px;
+        }
+        .nav-toggle:focus-visible + .nav-menu-button {
+          outline: 2px solid var(--blue-l);
+          outline-offset: 3px;
+        }
+        .nav-toggle:checked + .nav-menu-button span:nth-child(1) {
+          transform: translateY(7px) rotate(45deg);
+        }
+        .nav-toggle:checked + .nav-menu-button span:nth-child(2) {
+          opacity: 0;
+        }
+        .nav-toggle:checked + .nav-menu-button span:nth-child(3) {
+          transform: translateY(-7px) rotate(-45deg);
+        }
+        .nav-links {
+          align-items: stretch;
+          display: none;
+          flex-direction: column;
+          gap: 0;
+          grid-column: 1 / -1;
+          padding-top: 14px;
+          width: 100%;
+        }
+        .nav-toggle:checked ~ .nav-links {
+          display: flex;
+        }
+        .nav-links a {
+          border-top: 1px solid var(--border);
+          padding: 12px 0;
+        }
+        .nav-cta {
+          display: inline-flex;
+          justify-content: center;
+          margin-top: 10px;
+          padding: 10px 14px;
+          width: 100%;
+        }
+        .container {
+          padding: 0 16px;
+        }
+        .hero {
+          min-height: auto;
+          padding: 120px 0 56px;
+        }
+        .hero-glow {
+          height: 320px;
+          opacity: 0.8;
+        }
+        .status-badge {
+          align-items: flex-start;
+          border-radius: 14px;
+          line-height: 1.45;
+          max-width: 100%;
+        }
+        .status-dot {
+          flex: 0 0 auto;
+          margin-top: 5px;
+        }
+        .hero-tag {
+          align-items: flex-start;
+          font-size: 10px;
+          gap: 10px;
+          letter-spacing: 2px;
+          line-height: 1.5;
+        }
+        .hero-tag::before {
+          flex: 0 0 24px;
+          margin-top: 8px;
+          width: 24px;
+        }
+        .hero-sub {
+          font-size: 16px;
+          margin-bottom: 36px;
+        }
+        .hero-actions {
+          margin-bottom: 48px;
+        }
+        .btn-primary,
+        .btn-secondary {
+          width: 100%;
+          min-height: 48px;
+          padding: 13px 16px;
+          text-align: center;
+        }
+        .section {
+          padding: 64px 0;
+        }
+        .section-lead {
+          font-size: 16px;
+          margin-bottom: 36px;
+        }
+        .tiers {
+          grid-template-columns: 1fr;
+        }
+        .tier,
+        .product {
+          padding: 22px 20px;
+        }
+        .products {
+          grid-template-columns: 1fr;
+        }
+        .oss-block {
+          grid-template-columns: 1fr;
+          gap: 28px;
+          padding: 28px 20px;
+        }
+        .footer-inner {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+        .footer-right {
+          align-items: flex-start;
+          flex-direction: column;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .stat {
+          padding: 18px 12px;
+        }
+        .stat-num {
+          font-size: 24px;
+          overflow-wrap: anywhere;
+        }
+        .elevator-row {
+          grid-template-columns: 80px 1fr;
+          gap: 14px;
+          padding: 18px 16px;
+        }
+        .elevator-badge {
+          display: none;
+        }
+        .code-block {
+          padding: 18px 16px;
+          font-size: 12px;
+          max-width: 100%;
+          overflow-x: hidden;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+        .gh-link {
+          min-width: 0;
+          width: 100%;
+          white-space: normal;
+        }
+        h1 {
+          letter-spacing: -1px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        nav .inner {
+          padding: 0 14px;
+        }
+        nav a {
+          font-size: 12px;
+        }
+        .hero {
+          padding-top: 108px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        h1 {
+          font-size: clamp(36px, 13vw, 42px);
+          line-height: 1.06;
+        }
+        h2 {
+          font-size: 28px;
+        }
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .elevator-row {
+          grid-template-columns: 1fr;
+        }
+        .elevator-tier {
+          line-height: 1;
+        }
+        .footer-left p {
+          line-height: 1.7;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <div class="inner">
+        <a href="/" class="logo">
           <span class="logo-dot"></span>
           ori
         </a>
-        <p>Ori Nexus Systems LTD &nbsp;·&nbsp; Lagos, Nigeria &nbsp;·&nbsp; 2026</p>
+        <input
+          type="checkbox"
+          class="nav-toggle"
+          id="nav-toggle"
+          aria-label="Toggle navigation"
+        />
+        <label class="nav-menu-button" for="nav-toggle" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </label>
+        <div class="nav-links">
+          <a href="#architecture">Architecture</a>
+          <a href="#products">Products</a>
+          <a
+            href="https://github.com/ori-platform"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          <a href="mailto:wasiu@oriplatform.dev" class="nav-cta">Contact</a>
+        </div>
       </div>
-      <div class="footer-right">
-        <a href="https://github.com/ori-platform/ori-runtime" target="_blank" rel="noopener">GitHub</a>
-        <a href="mailto:wasiu@oriplatform.dev">wasiu@oriplatform.dev</a>
-        <a href="mailto:wbakare@oriplatform.dev">wbakare@oriplatform.dev</a>
-      </div>
-    </div>
-  </div>
-</footer>
+    </nav>
 
-</body>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="container">
+        <div class="status-badge fade-up fade-up-1">
+          <span class="status-dot"></span>
+          Active development — Lagos, Nigeria
+        </div>
+
+        <div class="hero-tag fade-up fade-up-1">
+          Open-source agentic IoT runtime
+        </div>
+
+        <h1 class="fade-up fade-up-2">
+          <span class="line-1">Intelligence</span>
+          <span class="line-2">for the</span>
+          <span class="line-3">physical world.</span>
+        </h1>
+
+        <p class="hero-sub fade-up fade-up-3">
+          Ori reads physical sensors, reasons locally with a small offline
+          language model, and takes
+          <strong>autonomous physical actions</strong> governed by a formal
+          Physical Actuation Trust framework. Runs on a
+          <strong>$55 Raspberry Pi</strong>. No cloud required.
+        </p>
+
+        <div class="hero-actions fade-up fade-up-4">
+          <a
+            href="https://github.com/ori-platform/ori-runtime"
+            class="btn-primary"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            View Runtime on GitHub
+          </a>
+          <a href="mailto:wasiu@oriplatform.dev" class="btn-secondary">
+            wasiu@oriplatform.dev
+          </a>
+        </div>
+
+        <div class="stats fade-up fade-up-5">
+          <div class="stat">
+            <span class="stat-num">901</span>
+            <span class="stat-label">Passing Tests</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">4</span>
+            <span class="stat-label">Action Tiers</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">$55</span>
+            <span class="stat-label">Target Hardware</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">Apache 2.0</span>
+            <span class="stat-label">Licence</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="architecture">
+      <div class="container">
+        <p class="section-tag">Physical Actuation Trust</p>
+        <h2>Every action earns its authority.</h2>
+        <p class="section-lead">
+          Ori does not treat LLM output as a direct control signal. Every
+          autonomous action is classified into one of four tiers. The tier
+          determines the execution path, oversight requirements, and failure
+          behaviour — governed by the Action Tier Framework.
+        </p>
+
+        <div class="tiers">
+          <div class="tier tier-a">
+            <div class="tier-label">Tier A — Informational</div>
+            <h3>Always autonomous</h3>
+            <p>
+              WhatsApp alerts, SMS, dashboard logs. The agent reasons and acts
+              without approval. When Ori sends a reasoned alert, no human
+              approved it first.
+            </p>
+          </div>
+          <div class="tier tier-b">
+            <div class="tier-label">Tier B — Soft Physical</div>
+            <h3>Autonomous by default</h3>
+            <p>
+              Power source switching, valve modulation, thermostat adjustment.
+              Reversible and low-consequence. Configurable to require approval.
+            </p>
+          </div>
+          <div class="tier tier-c">
+            <div class="tier-label">Tier C — Hard Physical</div>
+            <h3>Approval required. Always.</h3>
+            <p>
+              Breaker trips, equipment shutdown, high-pressure valve isolation.
+              Ori reasons and proposes. The operator replies YES or NO. No
+              bypass exists in the architecture.
+            </p>
+          </div>
+          <div class="tier tier-d">
+            <div class="tier-label">Tier D — Safety-Critical</div>
+            <h3>Deterministic. Pre-LLM. Inviolable.</h3>
+            <p>
+              Fires from the rule engine before any LLM is consulted. Cannot be
+              disabled by skill config, operator instruction, or runtime state.
+              asyncio.shield() ensures cancellation resistance.
+            </p>
+          </div>
+        </div>
+
+        <p class="section-tag" style="margin-top: 56px">
+          Intelligence Elevator
+        </p>
+        <h2>Cheapest adequate reasoning tier, always.</h2>
+        <p class="section-lead">
+          Four reasoning levels evaluated in order. First adequate tier wins.
+          Tier 1 and 2 operate fully offline.
+        </p>
+
+        <div class="elevator">
+          <div class="elevator-row">
+            <span class="elevator-tier t1">Tier 1</span>
+            <div class="elevator-desc">
+              <strong>Rule Engine</strong> — Deterministic rule evaluation in
+              microseconds. Handles all Tier D safety-critical events. Always
+              available.
+            </div>
+            <span class="elevator-badge badge-always">Always</span>
+          </div>
+          <div class="elevator-row">
+            <span class="elevator-tier t2">Tier 2</span>
+            <div class="elevator-desc">
+              <strong>Local SLM</strong> — Qwen2.5-0.5B via llama-cpp-python.
+              3–8s inference on Pi 4. Causal memory lookup before LLM call.
+            </div>
+            <span class="elevator-badge badge-offline">Offline</span>
+          </div>
+          <div class="elevator-row">
+            <span class="elevator-tier t3">Tier 3</span>
+            <div class="elevator-desc">
+              <strong>Gateway LLM</strong> — Llama 3.2-3B on a LAN gateway or
+              edge server. MQTT request/response. LAN required.
+            </div>
+            <span class="elevator-badge badge-lan">LAN only</span>
+          </div>
+          <div class="elevator-row">
+            <span class="elevator-tier t4">Tier 4</span>
+            <div class="elevator-desc">
+              <strong>Cloud LLM</strong> — Claude API or equivalent. Used only
+              when local reasoning confidence is insufficient.
+            </div>
+            <span class="elevator-badge badge-optional">Optional</span>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <span class="comment"
+            ># Example skill trigger — Tier D gas safety</span
+          >
+          <br />triggers: <br />&nbsp;&nbsp;- name:
+          <span class="str">gas_leak_detected</span>
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;condition:
+          <span class="str">'gas_concentration > 400'</span>
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">bypass_llm</span>:
+          <span class="val">true</span>
+          <span class="comment"># enforced automatically for Tier D</span>
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">action_tier</span>:
+          <span class="val">D</span>
+          <span class="comment"># fires before Intelligence Elevator</span>
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;cooldown_seconds:
+          <span class="val">0</span>
+          <span class="comment"># no delay on safety events</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- PRODUCTS -->
+    <section class="section" id="products">
+      <div class="container">
+        <p class="section-tag">Product Suite</p>
+        <h2>Three products. One runtime. One data moat.</h2>
+        <p class="section-lead">
+          Every product shares the same offline-capable runtime, safety
+          architecture, and causal memory layer. Each deployment compounds the
+          intelligence of every other.
+        </p>
+
+        <div class="products">
+          <div class="product product-energy">
+            <div class="product-icon">⚡</div>
+            <span class="product-tag">Ori Energy</span>
+            <h3>Smart power management</h3>
+            <p>
+              Autonomous generator control, solar monitoring, voltage spike
+              protection, and weekly Naira-denominated cost reports. Knows when
+              PHCN returns before you do.
+            </p>
+          </div>
+          <div class="product product-guard">
+            <div class="product-icon">🛡</div>
+            <span class="product-tag">Ori Guard</span>
+            <h3>Physical safety suite</h3>
+            <p>
+              Gas, Fire, Flood, and Power monitoring with autonomous safety
+              response. Tier D closes the valve. Tier A alerts your WhatsApp.
+              The four risks every commercial building carries, handled.
+            </p>
+          </div>
+          <div class="product product-operate">
+            <div class="product-icon">⚙</div>
+            <span class="product-tag">Ori Operate</span>
+            <h3>Industrial intelligence</h3>
+            <p>
+              OPC-UA and Modbus integration for manufacturers, cold chain
+              operators, and processing facilities. Energy cost per unit of
+              production, calculated in real time.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- OPEN SOURCE -->
+    <section class="section">
+      <div class="container">
+        <div class="oss-block">
+          <div>
+            <p class="section-tag">Open Source</p>
+            <h3>Apache 2.0. Auditable by design.</h3>
+            <p>
+              Any business that lets a system autonomously trip a breaker or
+              close a gas valve needs to trust the code. Ori lets customers,
+              insurance underwriters, and regulators audit exactly what is
+              making physical decisions. The Physical Actuation Trust framework
+              paper is in arXiv submission. 901 tests. Contributions welcome.
+            </p>
+          </div>
+          <a
+            href="https://github.com/ori-platform/ori-runtime"
+            class="gh-link"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            <strong>ori-platform</strong>
+            <span>github.com/ori-platform</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="container">
+        <div class="footer-inner">
+          <div class="footer-left">
+            <a
+              href="/"
+              class="logo"
+              style="
+                font-size: 16px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--text);
+              "
+            >
+              <span class="logo-dot"></span>
+              ori
+            </a>
+            <p>
+              Ori Nexus Systems LTD &nbsp;·&nbsp; Lagos, Nigeria &nbsp;·&nbsp;
+              2026
+            </p>
+          </div>
+          <div class="footer-right">
+            <a
+              href="https://github.com/ori-platform/ori-runtime"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+            <a href="mailto:wasiu@oriplatform.dev">wasiu@oriplatform.dev</a>
+            <a href="mailto:wbakare@oriplatform.dev">wbakare@oriplatform.dev</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>
