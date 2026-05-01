@@ -1053,6 +1053,16 @@
           width: 100%;
           white-space: normal;
         }
+        #waitlist-form {
+          max-width: 100% !important;
+        }
+        #waitlist-form .waitlist-grid {
+          grid-template-columns: 1fr !important;
+        }
+        #waitlist-btn {
+          align-self: stretch !important;
+          width: 100%;
+        }
         h1 {
           letter-spacing: -1px;
         }
@@ -1393,6 +1403,398 @@
         </div>
       </div>
     </section>
+
+    <div class="divider"></div>
+
+    <!-- WAITLIST -->
+    <section class="section" id="waitlist">
+      <div class="container">
+        <p class="section-tag">Early Access</p>
+        <h2>Be first when we deploy.</h2>
+        <p class="section-lead">
+          Ori is actively deploying in Lagos. Two sites are live now — energy
+          monitoring and HVAC gas detection. If you want early access for your
+          building, estate, or facility, join the waitlist.
+        </p>
+
+        <form id="waitlist-form" style="max-width: 560px">
+          <input type="hidden" name="source" value="website_waitlist" />
+          <div
+            style="
+              position: absolute;
+              left: -5000px;
+              width: 1px;
+              height: 1px;
+              overflow: hidden;
+            "
+            aria-hidden="true"
+          >
+            <label for="company_website">Leave this field empty</label>
+            <input
+              type="text"
+              id="company_website"
+              name="company_website"
+              tabindex="-1"
+              autocomplete="off"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              class="waitlist-grid"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
+            >
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label
+                  for="name"
+                  style="
+                    font-family: 'IBM Plex Mono', monospace;
+                    font-size: 11px;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    color: var(--text-2);
+                  "
+                  >Name</label
+                >
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  placeholder="Your name"
+                  style="
+                    background: var(--bg2);
+                    border: 1px solid var(--border);
+                    border-radius: 4px;
+                    padding: 12px 16px;
+                    color: var(--text);
+                    font-family: 'IBM Plex Mono', monospace;
+                    font-size: 13px;
+                    outline: none;
+                    transition: border-color 0.2s;
+                  "
+                  onfocus="this.style.borderColor='var(--blue-l)'"
+                  onblur="this.style.borderColor='var(--border)'"
+                />
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label
+                  for="phone"
+                  style="
+                    font-family: 'IBM Plex Mono', monospace;
+                    font-size: 11px;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    color: var(--text-2);
+                  "
+                  >WhatsApp number</label
+                >
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  required
+                  placeholder="+234 8XX XXX XXXX"
+                  pattern="[+]?[\d\s\-]{7,15}"
+                  title="Enter a valid phone number, e.g. +2348012345678"
+                  style="
+                    background: var(--bg2);
+                    border: 1px solid var(--border);
+                    border-radius: 4px;
+                    padding: 12px 16px;
+                    color: var(--text);
+                    font-family: 'IBM Plex Mono', monospace;
+                    font-size: 13px;
+                    outline: none;
+                    transition: border-color 0.2s;
+                  "
+                  onfocus="this.style.borderColor='var(--blue-l)'"
+                  onblur="validatePhone(this)"
+                />
+                <span
+                  id="phone-error"
+                  style="
+                    display: none;
+                    font-family: 'IBM Plex Mono', monospace;
+                    font-size: 11px;
+                    color: #e57373;
+                  "
+                >
+                  Enter a valid number with country code, e.g. +2348012345678
+                </span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label
+                for="email"
+                style="
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 11px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--text-2);
+                "
+                >Email</label
+              >
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                placeholder="you@company.com"
+                style="
+                  background: var(--bg2);
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  padding: 12px 16px;
+                  color: var(--text);
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 13px;
+                  outline: none;
+                  transition: border-color 0.2s;
+                "
+                onfocus="this.style.borderColor='var(--blue-l)'"
+                onblur="this.style.borderColor='var(--border)'"
+              />
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label
+                for="interest"
+                style="
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 11px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--text-2);
+                "
+                >What are you interested in?</label
+              >
+              <select
+                id="interest"
+                name="interest"
+                required
+                style="
+                  background: var(--bg2);
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  padding: 12px 16px;
+                  color: var(--text);
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 13px;
+                  outline: none;
+                  cursor: pointer;
+                  transition: border-color 0.2s;
+                  appearance: none;
+                "
+                onfocus="this.style.borderColor='var(--blue-l)'"
+                onblur="this.style.borderColor='var(--border)'"
+              >
+                <option value="" disabled selected>Select a product</option>
+                <option value="ori_energy">
+                  Ori Energy — power monitoring and generator management
+                </option>
+                <option value="ori_guard_gas">
+                  Ori Guard Gas — refrigerant / gas leak detection
+                </option>
+                <option value="ori_guard_fire">
+                  Ori Guard Fire — fire detection and alerting
+                </option>
+                <option value="ori_guard_flood">
+                  Ori Guard Flood — flood and water leak detection
+                </option>
+                <option value="ori_guard_power">
+                  Ori Guard Power — electrical fault monitoring
+                </option>
+                <option value="ori_guard_suite">
+                  Ori Guard Suite — full safety bundle
+                </option>
+                <option value="ori_operate">
+                  Ori Operate — industrial / commercial operations
+                </option>
+                <option value="channel_partner">
+                  Channel partner — I install/service buildings
+                </option>
+                <option value="developer">
+                  Developer — I want to build skills or contribute
+                </option>
+              </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label
+                for="context"
+                style="
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 11px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--text-2);
+                "
+                >Tell us about your site
+                <span style="color: var(--text-3)">(optional)</span></label
+              >
+              <textarea
+                id="context"
+                name="context"
+                rows="3"
+                placeholder="e.g. commercial office in Lagos, 3 AC units, Growatt inverter, frequent PHCN cuts"
+                style="
+                  background: var(--bg2);
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  padding: 12px 16px;
+                  color: var(--text);
+                  font-family: 'IBM Plex Mono', monospace;
+                  font-size: 13px;
+                  outline: none;
+                  resize: vertical;
+                  transition: border-color 0.2s;
+                  line-height: 1.5;
+                "
+                onfocus="this.style.borderColor='var(--blue-l)'"
+                onblur="this.style.borderColor='var(--border)'"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              id="waitlist-btn"
+              style="
+                background: var(--blue);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 4px;
+                border: 1px solid var(--blue);
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 13px;
+                font-weight: 500;
+                letter-spacing: 0.5px;
+                cursor: pointer;
+                transition: all 0.2s;
+                align-self: flex-start;
+              "
+              onmouseover="this.style.background='var(--blue-l)';this.style.borderColor='var(--blue-l)'"
+              onmouseout="this.style.background='var(--blue)';this.style.borderColor='var(--blue)'"
+            >
+              Join the waitlist →
+            </button>
+
+            <p
+              id="waitlist-success"
+              style="
+                display: none;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 13px;
+                color: var(--teal-l);
+                padding: 12px 16px;
+                background: rgba(14, 158, 128, 0.08);
+                border: 1px solid rgba(14, 158, 128, 0.2);
+                border-radius: 4px;
+              "
+            >
+              ✓ You're on the list. Check your email - we've sent a
+              confirmation. A team member will reach out via WhatsApp within 48
+              hours.
+            </p>
+            <p
+              id="waitlist-error"
+              style="
+                display: none;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 13px;
+                color: #e57373;
+                padding: 12px 16px;
+                background: rgba(192, 57, 43, 0.06);
+                border: 1px solid rgba(192, 57, 43, 0.2);
+                border-radius: 4px;
+              "
+            >
+              Something went wrong. Please email wasiu@oriplatform.dev
+              directly.
+            </p>
+          </div>
+        </form>
+
+        <p
+          style="
+            margin-top: 24px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--text-3);
+          "
+        >
+          No spam. No newsletter. We'll contact you directly when your area is
+          ready for deployment.
+        </p>
+      </div>
+    </section>
+
+    <script>
+      const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbwuGkPBvgvNocLiYXh2b9yQIpeICJWlG2f7aBu0-zsPZ5wmIM9ugWviSpZn9G2uaXLd/exec";
+
+      function validatePhone(input) {
+        const val = input.value.trim();
+        const err = document.getElementById("phone-error");
+        const ok = /^[+]?[\d\s\-]{7,15}$/.test(val);
+        if (!ok && val.length > 0) {
+          input.style.borderColor = "#E57373";
+          err.style.display = "block";
+        } else {
+          input.style.borderColor = val ? "var(--teal)" : "var(--border)";
+          err.style.display = "none";
+        }
+        return ok || val.length === 0;
+      }
+
+      document
+        .getElementById("waitlist-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const phoneInput = document.getElementById("phone");
+          if (!validatePhone(phoneInput)) {
+            phoneInput.focus();
+            return;
+          }
+
+          const btn = document.getElementById("waitlist-btn");
+          const success = document.getElementById("waitlist-success");
+          const errMsg = document.getElementById("waitlist-error");
+
+          btn.textContent = "Submitting...";
+          btn.style.opacity = "0.7";
+          btn.disabled = true;
+
+          const payload = {
+            name: document.getElementById("name").value.trim(),
+            phone: phoneInput.value.trim(),
+            email: document.getElementById("email").value.trim(),
+            interest: document.getElementById("interest").value,
+            context: document.getElementById("context").value.trim(),
+            source: "website_waitlist",
+            company_website:
+              document.getElementById("company_website").value.trim(),
+          };
+
+          try {
+            await fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            this.style.display = "none";
+            success.style.display = "block";
+          } catch {
+            btn.textContent = "Join the waitlist →";
+            btn.style.opacity = "1";
+            btn.disabled = false;
+            errMsg.style.display = "block";
+          }
+        });
+    </script>
 
     <!-- FOOTER -->
     <footer>
